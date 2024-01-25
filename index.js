@@ -5,11 +5,34 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.json({ type: "application/json" }));
 const getuser = async (req, res) => {
   try {
-    const [results] = await connection.promise().query("select * from users");
-    res.send(results);
-    console.log(results);
+    const { is_active, limit, offset } = req.query;
+    // const {is_active} = req.query;
+    // const querydata = req.query;
+    // console.log(!req.query.is_active )
+    // console.log(is_active)
+    if (!req.query.is_active) {
+      res.status(400).send({
+        message: "missing parameter",
+      });
+    } else {
+      const sqlquery =
+        "select * from users where is_active=? limit ? OFFSET ? ";
+      const [results] = await connection
+        .promise()
+        .execute(sqlquery, [is_active, limit, offset]);
+
+      res.status(200).send({
+        message: "done successfully",
+        result: results,
+      });
+      // console.log(results);
+    }
   } catch (error) {
-    console.log(error);
+    res.status(500).send({
+      message: "Internal server error",
+      error,
+    });
+    // console.log(error);
   }
 };
 const Addusers = async (req, res) => {
@@ -78,39 +101,32 @@ const deleteUser = async (req, res) => {
     });
   }
 };
-const getUserbyid = async(req,res)=>{
+const getUserbyid = async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const queryStrng = "select * from users where id=?";
-    const [results] = await connection.promise().query(queryStrng,[id]);
+    const [results] = await connection.promise().query(queryStrng, [id]);
 
-    if (results.length === 0 ) {
-      res.send({message:" user not found"})
+    if (results.length === 0) {
+      res.send({ message: " user not found" });
+    } else {
+      res.status(200).send({
+        message: "user found",
+        result: results[0],
+      });
     }
-  else
-  {
-    res.status(200).send(
-      {
-        message:"user found",
-        result:results[0]
-      }
-    )
-  }
-   // console.log(results[0])
+    // console.log(results[0])
   } catch (error) {
-    res.status(500).send(
-      {
-        message:"internal server error"
-      }
-    )
+    res.status(500).send({
+      message: "internal server error",
+    });
   }
-} 
+};
 app.post("/users", Addusers);
 app.get("/users", getuser);
 app.put("/users/:id", updateUser);
 app.delete("/users/:id", deleteUser);
 app.get("/users/:id", getUserbyid);
-
 
 app.listen(3000, () => {
   console.log("3000 server started");
