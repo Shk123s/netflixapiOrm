@@ -6,26 +6,31 @@ app.use(bodyParser.json({ type: "application/json" }));
 const getuser = async (req, res) => {
   try {
     const { is_active, limit, offset } = req.query;
-    // const {is_active} = req.query;
-    // const querydata = req.query;
-    // console.log(!req.query.is_active )
-    // console.log(is_active)
+   
     if (!req.query.is_active) {
       res.status(400).send({
         message: "missing parameter",
       });
     } else {
       const sqlquery =
-        "select * from users where is_active=? limit ? OFFSET ? ";
+        "select * from users where is_active=? order by names asc limit ? OFFSET ? ";
       const [results] = await connection
         .promise()
         .execute(sqlquery, [is_active, limit, offset]);
-
+        const queryStrngCount = "select count(*) as count from users";
+        const [resultsCount] = await connection.promise().query(queryStrngCount);
+        if (!results || results.length === 0) {
+          res.status(404).send({message:"user not found"})
+        }
+        
+     else{
       res.status(200).send({
         message: "done successfully",
         result: results,
+        TotalUsercount:resultsCount[0].count
       });
       // console.log(results);
+     }
     }
   } catch (error) {
     res.status(500).send({
@@ -122,12 +127,38 @@ const getUserbyid = async (req, res) => {
     });
   }
 };
+const getDetails =  async (req,res)=>{
+ try {
+  const {id} = req.params;
+  const queryStrng = "select id, email,names ,is_active from users where id=? "
+ const [results] = await connection.promise().query(queryStrng,[id]);
+if (!results || results.length === 0) {
+  res.status(404).send({message:"user not found"})
+}
+else{
+  res.status(200).send({
+    message:" Users List ",
+    list :results
+  });
+  // console.log(resultsCount)
+  //  console.log(results);
+}
+  
+ } catch (error) {
+  res.status(500).send({
+    message:"Internal server error",
+    error:error
+  });
+  console.log(error);
+ }
+};
+
 app.post("/users", Addusers);
 app.get("/users", getuser);
 app.put("/users/:id", updateUser);
 app.delete("/users/:id", deleteUser);
 app.get("/users/:id", getUserbyid);
-
+app.get("/usersdetails/:id", getDetails);
 app.listen(3000, () => {
   console.log("3000 server started");
 });
