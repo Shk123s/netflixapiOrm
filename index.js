@@ -5,18 +5,18 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.json({ type: "application/json" }));
 const getuser = async (req, res) => {
   try {
-    const { is_active, limit, offset } = req.query;
-   
+    const { is_active, limit, offset ,sortby} = req.query;
+   console.log(req.query)
     if (!req.query.is_active) {
       res.status(400).send({
         message: "missing parameter",
       });
     } else {
       const sqlquery =
-        "select * from users where is_active=? order by names asc limit ? OFFSET ? ";
+        `select * from users where is_active=? ORDER BY id ${sortby} limit ? OFFSET ? `;
       const [results] = await connection
         .promise()
-        .execute(sqlquery, [is_active, limit, offset]);
+        .execute(sqlquery, [is_active,sortby, limit, offset]);
         const queryStrngCount = "select count(*) as count from users";
         const [resultsCount] = await connection.promise().query(queryStrngCount);
         if (!results || results.length === 0) {
