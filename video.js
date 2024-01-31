@@ -5,11 +5,11 @@ const app = express();
 const bodyParser = require("body-parser");
 app.use(bodyParser.json({ type: "application/json" }));
 
-const getActors = async(req,res)=>{
+const getVideo = async(req,res)=>{
 
   try {
     // console.log("hhh")
-    const quertstring = "select * from actors";
+    const quertstring = "select * from videos";
 
     const [response] = await connection.promise().execute(quertstring);
     res.status(200).send({
@@ -22,12 +22,12 @@ const getActors = async(req,res)=>{
 
 
 }
-const getActorsById = async(req,res)=>{
+const getVideoById = async(req,res)=>{
 
   try {
     // console.log("hhh")
     const {id} = req.params;
-    const quertstring = "select * from actors where id=?";
+    const quertstring = "select * from videos where id=?";
     if(!id)
     {
         res.status(400).send({
@@ -59,10 +59,10 @@ const updateActors = async(req,res)=>{
    
 try {
    const {id} = req.params;
-    const { name,created_at ,is_active} = req.body;
+    const { title,description,is_active,created_at,updated_at,user_id,cast_id} = req.body;
     console.log(req.body  )
-    const string = `UPDATE   actors SET name=?,created_at=? ,is_active=? where id=?`;
-    const  [results] = await connection.promise().execute(string,[name,created_at ,is_active,id]);
+    const string = `UPDATE   videos SET title=?,description=? ,is_active=?,created_at=?,updated_at=?,user_id=?,cast_id=? where id=?`;
+    const  [results] = await connection.promise().execute(string,[ title,description,is_active,created_at,updated_at,user_id,cast_id,id]);
     res.status(201).send({
         message:"Done updating",
         results
@@ -83,7 +83,7 @@ try {
 const deleteActor= async (req, res) => {
   try {
     const { id } = req.params;
-    const queryStrng = "delete from actors where id=?";
+    const queryStrng = "delete from videos where id=?";
     const results = await connection.promise().query(queryStrng, [id]);
     //  console.log(results)///
     if (results[0].affectedRows === 0) {
@@ -108,7 +108,7 @@ const addActor = async (req, res) => {
   try {
     const { email, password, names, is_active, created_at } = req.body;
     console.log(req.body);
-    let queryStrng = `insert into actors( names,is_active,created_at) values( ?,? ,?)`;
+    let queryStrng = `insert into videos( title,description,is_active,created_at,updated_at,user_id,cast_id) values( ?,? ,?,?,?,?,?)`;
     const [results] = await connection
       .promise()
       .query(queryStrng, [email, password, names, is_active, created_at]);
@@ -124,11 +124,11 @@ const addActor = async (req, res) => {
     });
   }
 };
-app.get("/actors", getActors);
-app.get("/actors/:id", getActorsById);
-app.put("/actors/:id", updateActors);
-app.post("/actors", addActor);
-app.delete("/actors/:id", deleteActor);
+app.get("/videos", getVideo);
+app.get("/videos/:id", getVideoById);
+app.put("/videos/:id", updateActors);
+app.post("/videos", addActor);
+app.delete("/videos/:id", deleteActor);
 
 
 app.listen(3000, () => {
