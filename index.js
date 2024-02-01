@@ -15,7 +15,7 @@ const getuser = async (req, res) => {
       const sqlquery =
         `select * from users where is_active=? ORDER BY id ${sortby} limit ? OFFSET ? `;
       const [results] = await connection
-        .promise()
+        .promise() 
         .execute(sqlquery, [is_active,sortby, limit, offset]);
         const queryStrngCount = "select count(*) as count from users";
         const [resultsCount] = await connection.promise().query(queryStrngCount);
@@ -64,8 +64,38 @@ const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     //  console.log(id)
+ if(!id){
+  res.status(400).send({
+    message:"Id required"
+  })
+ }
+    let setData = [];
+    let queryData = [];
+    if (email) {
+      setData.push("email=?");
+      queryData.push(email)
+    }
+    if (password) {
+      setData.push("password=?");
+      queryData.push(password)
+    }
+    if (names) {
+      setData.push("names=?");
+      queryData.push(names);
+    }
+    if (is_active) {
+      setData.push("is_active=?");
+      queryData.push(is_active);
+    }
+    if (created_at) {
+      setData.push("created_at=?");
+      queryData.push(created_at);
+    }
+    const setString = setData.join(',');
+    console.log(queryData);
+    console.log(setString)
     const { email, password, names, is_active, created_at } = req.body;
-    let queryStrng = `update   users set email=? ,password=? ,names=?,is_active=?,created_at=? where id=? `;
+    let queryStrng = `update   users set ${setString} where id=? `;
     const [results] = await connection
       .promise()
       .query(queryStrng, [email, password, names, is_active, created_at, id]);
@@ -153,14 +183,15 @@ else{
  }
 };
 
-app.post("/users", Addusers);
-app.get("/users", getuser);
-app.put("/users/:id", updateUser);
-app.delete("/users/:id", deleteUser);
-app.get("/users/:id", getUserbyid);
-app.get("/usersdetails/:id", getDetails);
+app.post("/v1/users", Addusers);
+app.get("/v1/users", getuser);
+app.put("/v1/users/:id", updateUser);
+app.delete("/v1/users/:id", deleteUser);
+app.get("/v1/users/:id", getUserbyid);
+app.get("/v1/usersdetails/:id", getDetails);
 app.listen(3000, () => {
   console.log("3000 server started");
 });
+
 
 
