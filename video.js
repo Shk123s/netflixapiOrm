@@ -7,19 +7,23 @@ app.use(bodyParser.json({ type: "application/json" }));
 
 const getVideo = async(req,res)=>{
 
-  try {
-    // console.log("hhh")
-    const quertstring = "select * from videos";
+  try{  const {  limit, offset } = req.query;
+  console.log(req.query)
+ const quertstring = "select id,title,description,is_active,created_at,user_id from videos ORDER BY id desc limit ? offset ? ";
+ const [response] = await connection.promise().execute(quertstring,[limit, offset]);
+ const querycount = 'select count(*) as count from videos'
+ const [responsecount] = await connection.promise().execute(querycount);
 
-    const [response] = await connection.promise().execute(quertstring);
-    res.status(200).send({
-        message:"User ",
-        response
-    });
-  } catch (error) {
-    res.status(500).send(error);
-  }
+ res.status(200).send({
+     message:"video  list",
+     response,
+     responsecount:responsecount[0].count
+ });
 
+} catch (error) {
+ res.status(500).send(error);
+ console.log(error)
+}
 
 }
 const getVideoById = async(req,res)=>{
@@ -27,7 +31,7 @@ const getVideoById = async(req,res)=>{
   try {
     // console.log("hhh")
     const {id} = req.params;
-    const quertstring = "select * from videos where id=?";
+    const quertstring = "select id,title,description,is_active,user_id from videos where id=?";
     if(!id)
     {
         res.status(400).send({
@@ -63,11 +67,20 @@ try {
     console.log(req.body  )
     const string = `UPDATE   videos SET title=?,description=? ,is_active=?,created_at=?,updated_at=?,user_id=?,cast_id=? where id=?`;
     const  [results] = await connection.promise().execute(string,[ title,description,is_active,created_at,updated_at,user_id,cast_id,id]);
-    res.status(201).send({
+    if (results.affectedRows === 1) {
+  
+      res.status(200).send({
         message:"Done updating",
         results
-    });
-    console.log(results)
+      });
+       }
+       else{
+        res.status(400).send({
+          message:"not updated ",
+          results
+          
+      });
+    }
     
 } catch (error) {
     res.status(500).send({
@@ -80,40 +93,40 @@ try {
 }
 
 
-const deleteActor= async (req, res) => {
+const deleteVideo= async (req, res) => {
   try {
     const { id } = req.params;
     const queryStrng = "delete from videos where id=?";
-    const results = await connection.promise().query(queryStrng, [id]);
+    const results = await connection.promise().execute(queryStrng, [id]);
     //  console.log(results)///
     if (results[0].affectedRows === 0) {
       res.status(404).send({
-        message: "user Not found",
+        message: "video Not found",
       });
     } else {
       res.status(200).send({
-        message: "user deleted successfully",
+        message: "video deleted successfully",
         results,
       });
     }
   } catch (error) {
     console.log(error);
     res.status(501).send({
-      message: "user not found",
+      message: "Internal error",
       error,
     });
   }
 };
-const addActor = async (req, res) => {
+const addVideo = async (req, res) => {
   try {
-    const { email, password, names, is_active, created_at } = req.body;
+    const { title,description,is_active,created_at,user_id,cast_id } = req.body;
     console.log(req.body);
-    let queryStrng = `insert into videos( title,description,is_active,created_at,updated_at,user_id,cast_id) values( ?,? ,?,?,?,?,?)`;
+    let queryStrng = `insert into videos( title,description,is_active,created_at,user_id,cast_id) values( ?,? ,?,?,?,?)`;
     const [results] = await connection
       .promise()
-      .query(queryStrng, [email, password, names, is_active, created_at]);
+      .execute(queryStrng, [title,description,is_active,created_at,user_id,cast_id]);
     res.status(201).send({
-      message: "actor successfully added ",
+      message: "video successfully added ",
       results,
     });
     console.log(results);
@@ -124,11 +137,11 @@ const addActor = async (req, res) => {
     });
   }
 };
-app.get("/videos", getVideo);
-app.get("/videos/:id", getVideoById);
-app.put("/videos/:id", updateActors);
-app.post("/videos", addActor);
-app.delete("/videos/:id", deleteActor);
+app.get("/v1/video", getVideo);
+app.get("/v1/video/:id", getVideoById);
+app.put("/v1/video/:id", updateActors);
+app.post("/v1/video", addVideo);
+app.delete("/v1/video/:id", deleteVideo);
 
 
 app.listen(3000, () => {

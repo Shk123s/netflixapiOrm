@@ -7,18 +7,23 @@ app.use(bodyParser.json({ type: "application/json" }));
 
 const getStatus = async(req,res)=>{
 
-  try {
-    // console.log("hhh")
-    const quertstring = "select * from status";
+  try{  const {  limit, offset } = req.query;
+  console.log(req.query)
+ const quertstring = "select id,type,created_at,user_id from status ORDER BY id desc limit ? offset ? ";
+ const [response] = await connection.promise().execute(quertstring,[limit, offset]);
+ const querycount = 'select count(*) as count from status'
+ const [responsecount] = await connection.promise().execute(querycount);
 
-    const [response] = await connection.promise().execute(quertstring);
-    res.status(200).send({
-        message:"User ",
-        response
-    });
-  } catch (error) {
-    res.status(500).send(error);
-  }
+ res.status(200).send({
+     message:"status  list",
+     response,
+     responsecount:responsecount[0].count
+ });
+
+} catch (error) {
+ res.status(500).send(error);
+ console.log(error)
+}
 
 
 }
@@ -27,7 +32,7 @@ const getStatusById = async(req,res)=>{
   try {
     // console.log("hhh")
     const {id} = req.params;
-    const quertstring = "select * from status where id=?";
+    const quertstring = "select id,type,created_at,user_id from status where id=?";
     if(!id)
     {
         res.status(400).send({
@@ -39,12 +44,12 @@ const getStatusById = async(req,res)=>{
     if(response.length === 0 )
     {
         res.status(400).send({
-            message:"User not found ",
+            message:"status not found ",
             response
         });
     }else{
         res.status(200).send({
-            message:"User found ",
+            message:"status found ",
             response
         });
     }
@@ -63,11 +68,20 @@ try {
     console.log(req.body  )
     const string = `UPDATE   status SET type=?,created_at=? ,user_id=? where id=?`;
     const  [results] = await connection.promise().execute(string,[type,created_at ,user_id,id]);
-    res.status(201).send({
-        message:"Done updating",
-        results
-    });
-    console.log(results)
+ if (results.affectedRows === 1) {
+  
+res.status(200).send({
+  message:"Done updating",
+  results
+});
+ }
+ else{
+  res.status(400).send({
+    message:"not updated ",
+    results
+});
+ }
+    // console.log(results)
     
 } catch (error) {
     res.status(500).send({
@@ -84,17 +98,19 @@ const deleteStatus= async (req, res) => {
   try {
     const { id } = req.params;
     const queryStrng = "delete from status where id=?";
-    const results = await connection.promise().query(queryStrng, [id]);
+    const results = await connection.promise().execute(queryStrng, [id]);
     //  console.log(results)///
     if (results[0].affectedRows === 0) {
       res.status(404).send({
-        message: "user Not found",
+        message: "status Not found",
       });
     } else {
-      res.status(200).send({
-        message: "user deleted successfully",
-        results,
-      });
+      if(results[0].affectedRows === 1){
+        res.status(200).send({
+          message: "status deleted successfully",
+          results:results[0],
+        });
+      }
     }
   } catch (error) {
     console.log(error);
@@ -111,9 +127,9 @@ const addStatus = async (req, res) => {
     let queryStrng = `insert into status( type,created_at,user_id) values( ?,? ,?)`;
     const [results] = await connection
       .promise()
-      .query(queryStrng, [type,created_at,user_id]);
+      .execute(queryStrng, [type,created_at,user_id]);
     res.status(201).send({
-      message: "actor successfully added ",
+      message: "status successfully added ",
       results,
     });
     console.log(results);
@@ -124,11 +140,11 @@ const addStatus = async (req, res) => {
     });
   }
 };
-app.get("/status", getStatus);
-app.get("/status/:id", getStatusById);
-app.put("/actors/:id", updateUser);
-app.post("/actors", deleteStatus);
-app.delete("/actors/:id", addStatus);
+app.get("/v1/status", getStatus);
+app.get("/v1/status/:id", getStatusById);
+app.put("/v1/status/:id", updateUser);
+app.post("/v1/status", addStatus);
+app.delete("/v1/status/:id", deleteStatus);
 
 
 app.listen(3000, () => {

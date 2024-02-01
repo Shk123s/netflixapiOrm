@@ -7,19 +7,23 @@ app.use(bodyParser.json({ type: "application/json" }));
 
 const getcasts = async(req,res)=>{
 
+ 
   try {
-    // console.log("hhh")
-    const quertstring = "select * from casts";
+    const {  limit, offset } = req.query;
+    //  console.log(req.query)
+    const quertstring = "select id,actor_id,created_at from casts ORDER BY id desc limit ? offset ? ";
+    const [response] = await connection.promise().execute(quertstring,[limit, offset]);
+    const querycount = 'select count(*) as count from casts'
+    const [responsecount] = await connection.promise().execute(querycount);
 
-    const [response] = await connection.promise().execute(quertstring);
     res.status(200).send({
-        message:"User ",
-        response
+        message:"casts list",
+        response,
+        responsecount:responsecount[0].count
     });
   } catch (error) {
     res.status(500).send(error);
   }
-
 
 }
 const getCastsById = async(req,res)=>{
@@ -27,7 +31,7 @@ const getCastsById = async(req,res)=>{
   try {
     // console.log("hhh")
     const {id} = req.params;
-    const quertstring = "select * from casts where id=?";
+    const quertstring = "select actor_id,created_at from casts where id=?";
     if(!id)
     {
         res.status(400).send({
@@ -88,18 +92,18 @@ const deleteCasts = async (req, res) => {
     //  console.log(results)///
     if (results[0].affectedRows === 0) {
       res.status(404).send({
-        message: "user Not found",
+        message: "cast Not found",
       });
     } else {
       res.status(200).send({
-        message: "user deleted successfully",
-        results,
+        message: "cast deleted successfully",
+        results:results[0],
       });
     }
   } catch (error) {
     console.log(error);
     res.status(501).send({
-      message: "user not found",
+      message: "cast not found",
       error,
     });
   }
@@ -113,7 +117,7 @@ const addCasts = async (req, res) => {
       .promise()
       .query(queryStrng, [created_at,updated_at,actor_id]);
     res.status(201).send({
-      message: "actor successfully added ",
+      message: "casts successfully added ",
       results,
     });
     console.log(results);
@@ -124,11 +128,11 @@ const addCasts = async (req, res) => {
     });
   }
 };
-app.get("/casts", getcasts);
-app.get("/casts/:id", getCastsById);
-app.put("/casts/:id", updateCasts);
-app.post("/casts", addCasts);
-app.delete("/casts/:id", deleteCasts);
+app.get("/v1/casts", getcasts);
+app.get("/v1/casts/:id", getCastsById);
+app.put("/v1/casts/:id", updateCasts);
+app.post("/v1/casts", addCasts);
+app.delete("/v1/casts/:id", deleteCasts);
 
 
 app.listen(3000, () => {

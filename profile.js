@@ -6,25 +6,29 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.json({ type: "application/json" }));
 
 const getProfile = async (req, res) => {
-  try {
-    // console.log("hhh")
-    const quertstring = "select * from profiles";
+try{  const {  limit, offset } = req.query;
+   console.log(req.query)
+  const quertstring = "select id,name,limits,type,created_at,user_id from profiles ORDER BY id desc limit ? offset ? ";
+  const [response] = await connection.promise().execute(quertstring,[limit, offset]);
+  const querycount = 'select count(*) as count from profiles'
+  const [responsecount] = await connection.promise().execute(querycount);
 
-    
-    const [response] = await connection.promise().execute(quertstring);
-    res.status(200).send({
-      message: "User ",
+  res.status(200).send({
+      message:"profile  list",
       response,
-    });
-  } catch (error) {
-    res.status(500).send(error);
-  }
+      responsecount:responsecount[0].count
+  });
+ 
+} catch (error) {
+  res.status(500).send(error);
+  console.log(error)
+}
 };
 const getProfileById = async (req, res) => {
   try {
     // console.log("hhh")
     const { id } = req.params;
-    const quertstring = "select * from profiles where id=?";
+    const quertstring = "select id, name ,limits,type,created_at from profiles where id=?";
     if (!id) {
       res.status(400).send({
         message: "id required ",
@@ -51,7 +55,7 @@ const updateProfile = async (req, res) => {
     const { id } = req.params;
     const { name, limits, type, created_at, updated_at, user_id } = req.body;
     console.log(req.body);
-    const string = `UPDATE   casts SET name=?,limits=? ,type=?,created_at=?,updated_at=?,user_id=? where id=?`;
+    const string = `UPDATE   profiles SET name=?,limits=? ,type=?,created_at=?,updated_at=?,user_id=? where id=?`;
     const [results] = await connection
       .promise()
       .execute(string, [
@@ -63,11 +67,18 @@ const updateProfile = async (req, res) => {
         user_id,
         id
       ]);
-    res.status(200).send({
-      message: "Done updating",
-      results,
-    });
-    console.log(results);
+      if (results.affectedRows === 1) {
+  
+        res.status(200).send({
+          message:"Done updating",
+          results
+        });
+         }
+         else{
+          res.status(400).send({
+            message:"not updated ",
+            results
+        });}
   } catch (error) {
     res.status(500).send({
       message: "Internal server error",
@@ -88,7 +99,7 @@ const deleteProfile = async (req, res) => {
       });
     } else {
       res.status(200).send({
-        message: "user deleted successfully",
+        message: "profile deleted successfully",
         results,
       });
     }
@@ -100,7 +111,7 @@ const deleteProfile = async (req, res) => {
     });
   }
 };
-const addActor = async (req, res) => {
+const addProfile = async (req, res) => {
   try {
     const {  name,
         limits,
@@ -109,22 +120,12 @@ const addActor = async (req, res) => {
         updated_at,
         user_id } = req.body;
     console.log(req.body);
-    let queryStrng = `insert into videos(  name,
-        limits,
-        type,
-        created_at,
-        updated_at,
-        user_id,) values( ?,? ,?,?,?,?)`;
+    let queryStrng = `insert into profiles(  name,limits,type,created_at,updated_at,user_id) values( ?,? ,?,?,?,?)`;
     const [results] = await connection
       .promise()
-      .query(queryStrng, [name,
-        limits,
-        type,
-        created_at,
-        updated_at,
-        user_id]);
+      .execute(queryStrng, [name,  limits,type,created_at,updated_at,user_id]);
     res.status(201).send({
-      message: "actor successfully added ",
+      message: "profile successfully added ",
       results,
     });
     console.log(results);
@@ -135,11 +136,11 @@ const addActor = async (req, res) => {
     });
   }
 };
-app.get("/profile", getProfile);
-app.get("/profile/:id", getProfileById);
-app.put("/profile/:id", updateProfile);
-app.post("/profile", addActor);
-app.delete("/profile/:id", deleteProfile);
+app.get("/v1/profile", getProfile);
+app.get("/v1/profile/:id", getProfileById);
+app.put("/v1/profile/:id", updateProfile);
+app.post("/v1/profile", addProfile);
+app.delete("/v1/profile/:id", deleteProfile);
 
 app.listen(3000, () => {
   console.log("3000 server started acotrs");

@@ -8,13 +8,17 @@ app.use(bodyParser.json({ type: "application/json" }));
 const getActors = async(req,res)=>{
 
   try {
-    // console.log("hhh")
-    const quertstring = "select * from actors";
+    const {  limit, offset } = req.query;
+    //  console.log(req.query)
+    const quertstring = "select id,name from actors ORDER BY id desc limit ? offset ? ";
+    const [response] = await connection.promise().execute(quertstring,[limit, offset]);
+    const querycount = 'select count(*) as count from actors'
+    const [responsecount] = await connection.promise().execute(querycount);
 
-    const [response] = await connection.promise().execute(quertstring);
     res.status(200).send({
-        message:"User ",
-        response
+        message:"Actors list",
+        response,
+        responsecount:responsecount[0].count
     });
   } catch (error) {
     res.status(500).send(error);
@@ -27,7 +31,7 @@ const getActorsById = async(req,res)=>{
   try {
     // console.log("hhh")
     const {id} = req.params;
-    const quertstring = "select * from actors where id=?";
+    const quertstring = "select id,name,is_active from actors where id=?";
     if(!id)
     {
         res.status(400).send({
@@ -58,6 +62,7 @@ const getActorsById = async(req,res)=>{
 const updateActors = async(req,res)=>{
    
 try {
+  console.log("object")
    const {id} = req.params;
     const { name,created_at ,is_active} = req.body;
     console.log(req.body  )
@@ -88,30 +93,30 @@ const deleteActor= async (req, res) => {
     //  console.log(results)///
     if (results[0].affectedRows === 0) {
       res.status(404).send({
-        message: "user Not found",
+        message: "actor Not found",
       });
     } else {
       res.status(200).send({
-        message: "user deleted successfully",
-        results,
+        message: "actor deleted successfully",
+        results:results[0]
       });
     }
   } catch (error) {
     console.log(error);
     res.status(501).send({
-      message: "user not found",
+      message: "Internal server error",
       error,
     });
   }
 };
 const addActor = async (req, res) => {
   try {
-    const { email, password, names, is_active, created_at } = req.body;
+    const {  name, is_active, created_at } = req.body;
     console.log(req.body);
-    let queryStrng = `insert into actors( names,is_active,created_at) values( ?,? ,?)`;
+    let queryStrng = `insert into actors( name,is_active,created_at) values( ?,? ,?)`;
     const [results] = await connection
       .promise()
-      .query(queryStrng, [email, password, names, is_active, created_at]);
+      .query(queryStrng, [ name, is_active, created_at]);
     res.status(201).send({
       message: "actor successfully added ",
       results,
@@ -124,11 +129,11 @@ const addActor = async (req, res) => {
     });
   }
 };
-app.get("/actors", getActors);
-app.get("/actors/:id", getActorsById);
-app.put("/actors/:id", updateActors);
-app.post("/actors", addActor);
-app.delete("/actors/:id", deleteActor);
+app.get("/v1/actors", getActors);
+app.get("/v1/actors/:id", getActorsById);
+app.put("/v1/actors/:id", updateActors);
+app.post("/v1/actors", addActor);
+app.delete("/v1/actors/:id", deleteActor);
 
 
 app.listen(3000, () => {

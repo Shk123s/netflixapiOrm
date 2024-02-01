@@ -7,19 +7,23 @@ app.use(bodyParser.json({ type: "application/json" }));
 
 const getWatchlists = async(req,res)=>{
 
-  try {
-    // console.log("hhh")
-    const quertstring = "select * from watchlists";
+  try{  const {  limit, offset } = req.query;
+   console.log(req.query)
+  const quertstring = "select id,last_watch,created_at,user_id,status_id from watchlists ORDER BY id desc limit ? offset ? ";
+  const [response] = await connection.promise().execute(quertstring,[limit, offset]);
+  const querycount = 'select count(*) as count from watchlists'
+  const [responsecount] = await connection.promise().execute(querycount);
 
-    const [response] = await connection.promise().execute(quertstring);
-    res.status(200).send({
-        message:"User ",
-        response
-    });
-  } catch (error) {
-    res.status(500).send(error);
-  }
-
+  res.status(200).send({
+      message:"watchlist  list",
+      response,
+      responsecount:responsecount[0].count
+  });
+ 
+} catch (error) {
+  res.status(500).send(error);
+  console.log(error)
+}
 
 }
 const getWatchlistsById = async(req,res)=>{
@@ -27,7 +31,7 @@ const getWatchlistsById = async(req,res)=>{
   try {
     // console.log("hhh")
     const {id} = req.params;
-    const quertstring = "select * from  watchlists where id=?";
+    const quertstring = "select last_watch,created_at,user_id,status_id from  watchlists where id=?";
     if(!id)
     {
         res.status(400).send({
@@ -59,22 +63,23 @@ const updateWatchlists = async(req,res)=>{
    
 try {
    const {id} = req.params;
-    const {  last_watch , 
-        video_id,
-        status_id , 
-        created_at ,
+    const {  last_watch,created_at,user_id,status_id 
         } = req.body;
     console.log(req.body  )
-    const string = `UPDATE   watchlists SET  last_watch=?,video_id=?,status_id=?,created_at=?, where id=?`;
-    const  [results] = await connection.promise().execute(string,[ last_watch , 
-        video_id,
-        status_id , 
-        created_at ,id]);
-    res.status(201).send({
-        message:"Done updating",
-        results
-    });
-    console.log(results)
+    const string = `UPDATE   watchlists SET last_watch=? ,created_at=?,user_id=?,status_id=?  where id=?`;
+    const  [results] = await connection.promise().execute(string,[ last_watch,created_at,user_id,status_id ,id]);
+        if (results.affectedRows === 1) {
+  
+          res.status(200).send({
+            message:"Done updating",
+            results
+          });
+           }
+           else{
+            res.status(400).send({
+              message:"not updated ",
+              results
+          });}
     
 } catch (error) {
     res.status(500).send({
@@ -106,30 +111,21 @@ const deleteWatchlists = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(501).send({
-      message: "user not found",
+      message: "Internal error",
       error,
     });
   }
 };
 const addWatchlists = async (req, res) => {
   try {
-    const { last_watch , 
-        video_id,
-        status_id , 
-        created_at  } = req.body;
+    const { last_watch,created_at,user_id,status_id  } = req.body;
     console.log(req.body);
-    let queryStrng = `insert into casts( last_watch , 
-        video_id,
-        status_id , 
-        created_at ) values(?, ?,?,?)`;
+    let queryStrng = `insert into watchlists( last_watch,created_at,user_id,status_id) values(?, ?,?,?)`;
     const [results] = await connection
       .promise()
-      .query(queryStrng, [last_watch , 
-        video_id,
-        status_id , 
-        created_at ]);
+      .execute(queryStrng, [last_watch,created_at,user_id,status_id ]);
     res.status(201).send({
-      message: "casts successfully added ",
+      message: "watchlist successfully added ",
       results,
     });
     console.log(results);
@@ -140,11 +136,11 @@ const addWatchlists = async (req, res) => {
     });
   }
 };
-app.get("/watchlists",getWatchlists);
-app.get("/watchlists/:id", getWatchlistsById);
-app.put("/watchlists/:id", updateWatchlists);
-app.post("/watchlists", addWatchlists);
-app.delete("/watchlists/:id", deleteWatchlists);
+app.get("/v1/watchlists",getWatchlists);
+app.get("/v1/watchlists/:id", getWatchlistsById);
+app.put("/v1/watchlists/:id", updateWatchlists);
+app.post("/v1/watchlists", addWatchlists);
+app.delete("/v1/watchlists/:id", deleteWatchlists);
 
 
 app.listen(3000, () => {
