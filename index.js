@@ -187,7 +187,7 @@ const userLogin = async (req,res)=>{
   try {
     const {email,password} = req.body;
    console.log(req.body)
-    if (!email && !password ) {
+    if (!email ||  !password ) {
       res.status(400).send({
         message: "missing parameter",
       });
