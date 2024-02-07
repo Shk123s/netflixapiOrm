@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.json({ type: "application/json" }));
 const getuser = async (req, res) => {
   try {
-    const { is_active, limit, offset ,sortby} = req.query;
+    const {is_active, limit, offset ,sortby} = req.query;
    console.log(req.query)
     if (!req.query.is_active) {
       res.status(400).send({
@@ -183,6 +183,41 @@ else{
  }
 };
 
+const userLogin = async (req,res)=>{
+  try {
+    const {email,password} = req.body;
+   console.log(req.body)
+    if (!email && !password ) {
+      res.status(400).send({
+        message: "missing parameter",
+      });
+    } else {  
+      const sqlquery =
+        `select email,password from users where email=? and password =? `;
+      const [results] = await connection
+        .promise() 
+        .execute(sqlquery, [email,password]);
+      
+        if ( results.length === 0) {
+          res.status(500).send({message:"Invalid credentails"})
+        }
+        
+     else{
+      res.status(200).send({
+        message: "Login successfully",
+        result: results,
+      });
+     }}
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error",
+      error,
+    });
+    // console.log(error);
+  }
+}
+
+app.get("/v1/users/login", userLogin);
 app.post("/v1/users", Addusers);
 app.get("/v1/users", getuser);
 app.put("/v1/users/:id", updateUser);
