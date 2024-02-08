@@ -216,8 +216,67 @@ const userLogin = async (req,res)=>{
     // console.log(error);
   }
 }
+const forgetpassword = async(req,res)=>{
+ 
+ try {
+    const min = 1000;
+    const max = 9999;
+    const otp = Math.floor(Math.random() * (max - min + 1)) + min;
+    const { email } = req.body;
+    
+    // console.log(otp);
+    let queryStrngotp = `update users set  otp =${otp} where email = ? `;
+    const [results] = await connection
+      .promise()
+      .query(queryStrngotp,[email]);
+   if (results.affectedRows === 1) {
+    res.status(200).send({
+      message: "otp sent",
+      results,
+    });
+   }
+   else{
+    res.status(403).send({
+      message: "Invalid email"
+    });
+   }
+ } catch (error) {
+  res.status(500).send({
+    message: "Internal server error"
+  });
+ }
 
+}
+const resetpassword = async(req,res)=>{
+  try {
+    
+    const { password,otp } = req.body;
+    console.log(req.body);
+    let queryStrngotp = `update users set  password = ? where  otp =? `;
+    const [results] = await connection
+      .promise()
+      .query(queryStrngotp,[password,otp]);
+   if (results.affectedRows === 1) {
+    res.status(201).send({
+      message: "password updated ",
+      results,
+    });
+   }
+   else{
+    res.status(401).send({
+      message: "Invalid otp"
+    });
+   }
+ } catch (error) {
+  res.status(201).send({
+    message: "Internal server error"
+  });
+ }
+
+}
 app.get("/v1/users/login", userLogin);
+app.post("/v1/users/forgetpassword", forgetpassword);
+app.post("/v1/users/resetpassword",resetpassword)
 app.post("/v1/users", Addusers);
 app.get("/v1/users", getuser);
 app.put("/v1/users/:id", updateUser);
