@@ -275,8 +275,20 @@ const getuser = async (req, res) => {
   
   }
 
+const middleware = (req,res,next)=>{
+    const {user_id,token} = req.headers
+   if (user_id && token) {
+    next();
+   }
+   else{
+    res.status(400).send({message:"Invalid request"})
+   }
 
-router.get("/v1/users/login", userLogin);
+  } 
+  
+  
+
+router.get("/v1/users/login",middleware, userLogin);
 router.post("/v1/users/forgetpassword", forgetpassword);
 router.post("/v1/users/resetpassword",resetpassword)
 router.post("/v1/users", Addusers);

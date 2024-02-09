@@ -6,7 +6,6 @@ const profile = require('./profile');
 const video = require("./video");
 const casts = require('./casts');
 const actorsCrud = require('./actorsCrud');
-const actorsCrud = require('./actorsCrud');
 const watchlist = require('./watchlist');
 const bodyParser = require("body-parser");
 app.use(bodyParser.json({ type: "application/json" }));

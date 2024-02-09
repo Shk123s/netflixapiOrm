@@ -3,7 +3,7 @@ const connection = require("./database");
 const router = express.Router();
 // const index= require("./index")
 // const bodyParser = require("body-parser");
-// app.use(bodyParser.json({ type: "application/json" }));
+// router.use(bodyParser.json({ type: "routerlication/json" }));
 
 const getVideo = async(req,res)=>{
 
@@ -137,11 +137,11 @@ const addVideo = async (req, res) => {
     });
   }
 };
-app.get("/v1/video", getVideo);
-app.get("/v1/video/:id", getVideoById);
-app.put("/v1/video/:id", updateActors);
-app.post("/v1/video", addVideo);
-app.delete("/v1/video/:id", deleteVideo);
+router.get("/v1/video", getVideo);
+router.get("/v1/video/:id", getVideoById);
+router.put("/v1/video/:id", updateActors);
+router.post("/v1/video", addVideo);
+router.delete("/v1/video/:id", deleteVideo);
 
 
 module.exports = router;

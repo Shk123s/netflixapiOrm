@@ -4,7 +4,7 @@ const connection = require("./database");
 const router = express.Router();
 // const index= require("./index")
 // const bodyParser = require("body-parser");
-// app.use(bodyParser.json({ type: "application/json" }));
+// router.use(bodyParser.json({ type: "routerlication/json" }));
 
 const getWatchlists = async(req,res)=>{
 
@@ -137,10 +137,10 @@ const addWatchlists = async (req, res) => {
     });
   }
 };
-app.get("/v1/watchlists",getWatchlists);
-app.get("/v1/watchlists/:id", getWatchlistsById);
-app.put("/v1/watchlists/:id", updateWatchlists);
-app.post("/v1/watchlists", addWatchlists);
-app.delete("/v1/watchlists/:id", deleteWatchlists);
+router.get("/v1/watchlists",getWatchlists);
+router.get("/v1/watchlists/:id", getWatchlistsById);
+router.put("/v1/watchlists/:id", updateWatchlists);
+router.post("/v1/watchlists", addWatchlists);
+router.delete("/v1/watchlists/:id", deleteWatchlists);
 
 module.exports = router
