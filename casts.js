@@ -1,9 +1,8 @@
 const express = require("express");
 const connection = require("./database");
-const app = express();
+const router = express.Router();
 // const index= require("./index")
-const bodyParser = require("body-parser");
-app.use(bodyParser.json({ type: "application/json" }));
+
 
 const getcasts = async(req,res)=>{
 
@@ -128,13 +127,11 @@ const addCasts = async (req, res) => {
     });
   }
 };
-app.get("/v1/casts", getcasts);
-app.get("/v1/casts/:id", getCastsById);
-app.put("/v1/casts/:id", updateCasts);
-app.post("/v1/casts", addCasts);
-app.delete("/v1/casts/:id", deleteCasts);
+router.get("/v1/casts", getcasts);
+router.get("/v1/casts/:id", getCastsById);
+router.put("/v1/casts/:id", updateCasts);
+router.post("/v1/casts", addCasts);
+router.delete("/v1/casts/:id", deleteCasts);
 
 
-app.listen(3000, () => {
-    console.log("3000 server started acotrs");
-  });
+module.exports = router

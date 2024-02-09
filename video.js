@@ -1,9 +1,9 @@
 const express = require("express");
 const connection = require("./database");
-const app = express();
+const router = express.Router();
 // const index= require("./index")
-const bodyParser = require("body-parser");
-app.use(bodyParser.json({ type: "application/json" }));
+// const bodyParser = require("body-parser");
+// app.use(bodyParser.json({ type: "application/json" }));
 
 const getVideo = async(req,res)=>{
 
@@ -144,6 +144,4 @@ app.post("/v1/video", addVideo);
 app.delete("/v1/video/:id", deleteVideo);
 
 
-app.listen(3000, () => {
-    console.log("3000 server started acotrs");
-  });
+module.exports = router;

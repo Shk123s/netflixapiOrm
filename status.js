@@ -2,9 +2,9 @@ const express = require("express");
 const connection = require("./database");
 const app = express();
 // const index= require("./index")
-const bodyParser = require("body-parser");
-app.use(bodyParser.json({ type: "application/json" }));
-
+// const bodyParser = require("body-parser");
+// app.use(bodyParser.json({ type: "application/json" }));
+const router = express.Router();
 const getStatus = async(req,res)=>{
 
   try{  const {  limit, offset } = req.query;
@@ -147,6 +147,3 @@ app.post("/v1/status", addStatus);
 app.delete("/v1/status/:id", deleteStatus);
 
 
-app.listen(3000, () => {
-    console.log("3000 server started acotrs");
-  });

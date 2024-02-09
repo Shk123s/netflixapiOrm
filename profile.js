@@ -1,10 +1,12 @@
 const express = require("express");
 const connection = require("./database");
-const app = express();
+
 // const index= require("./index")
 const bodyParser = require("body-parser");
-app.use(bodyParser.json({ type: "application/json" }));
+// router.use(bodyParser.json({ type: "routerlication/json" }));
 
+
+const router = express.Router();
 const getProfile = async (req, res) => {
 try{  const {  limit, offset } = req.query;
    console.log(req.query)
@@ -136,12 +138,10 @@ const addProfile = async (req, res) => {
     });
   }
 };
-app.get("/v1/profile", getProfile);
-app.get("/v1/profile/:id", getProfileById);
-app.put("/v1/profile/:id", updateProfile);
-app.post("/v1/profile", addProfile);
-app.delete("/v1/profile/:id", deleteProfile);
+router.get("/v1/profile", getProfile);
+router.get("/v1/profile/:id", getProfileById);
+router.put("/v1/profile/:id", updateProfile);
+router.post("/v1/profile", addProfile);
+router.delete("/v1/profile/:id", deleteProfile);
 
-app.listen(3000, () => {
-  console.log("3000 server started acotrs");
-});
+module.exports = router;

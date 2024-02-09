@@ -1,9 +1,10 @@
 const express = require("express");
 const connection = require("./database");
-const app = express();
+
+const router = express.Router();
 // const index= require("./index")
-const bodyParser = require("body-parser");
-app.use(bodyParser.json({ type: "application/json" }));
+// const bodyParser = require("body-parser");
+// app.use(bodyParser.json({ type: "application/json" }));
 
 const getWatchlists = async(req,res)=>{
 
@@ -142,7 +143,4 @@ app.put("/v1/watchlists/:id", updateWatchlists);
 app.post("/v1/watchlists", addWatchlists);
 app.delete("/v1/watchlists/:id", deleteWatchlists);
 
-
-app.listen(3000, () => {
-    console.log("3000 server started acotrs");
-  });
+module.exports = router

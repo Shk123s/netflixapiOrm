@@ -1,9 +1,9 @@
 const express = require("express");
 const connection = require("./database");
-const app = express();
+const router = express.Router();
 // const index= require("./index")
-const bodyParser = require("body-parser");
-app.use(bodyParser.json({ type: "application/json" }));
+// const bodyParser = require("body-parser");
+// router.use(bodyParser.json({ type: "routerlication/json" }));
 
 const getActors = async(req,res)=>{
 
@@ -129,13 +129,11 @@ const addActor = async (req, res) => {
     });
   }
 };
-app.get("/v1/actors", getActors);
-app.get("/v1/actors/:id", getActorsById);
-app.put("/v1/actors/:id", updateActors);
-app.post("/v1/actors", addActor);
-app.delete("/v1/actors/:id", deleteActor);
+router.get("/v1/actors", getActors);
+router.get("/v1/actors/:id", getActorsById);
+router.put("/v1/actors/:id", updateActors);
+router.post("/v1/actors", addActor);
+router.delete("/v1/actors/:id", deleteActor);
 
 
-app.listen(3000, () => {
-    console.log("3000 server started acotrs");
-  });
+module.exports =router
