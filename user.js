@@ -117,7 +117,7 @@ const getuser = async (req, res) => {
   const deleteUser = async (req, res) => {
     try {
       const { id } = req.params;
-      const queryStrng = "delete from users where id=?";
+      const queryStrng = "update users set is_active=0 where id=?";
       const results = await connection.promise().query(queryStrng, [id]);
       //  console.log(results)///
       if (results[0].affectedRows === 0) {
@@ -301,7 +301,8 @@ router.post("/v1/users/resetpassword",resetpassword)
 router.post("/v1/users", Addusers);
 router.get("/v1/users", getuser);
 router.put("/v1/users/:id", updateUser);
-router.delete("/v1/users/:id", deleteUser);
+//soft delete 
+router.post("/v1/users/:id", deleteUser);
 router.get("/v1/usersprofile/:id", usersprofile);
 router.get("/v1/usersdetails/:id", getDetails);
 
