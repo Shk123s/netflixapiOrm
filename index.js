@@ -1,5 +1,4 @@
 const express = require("express");
-const connection = require("./database");
 const app = express();
 const user = require("./user");
 const profile = require('./profile');
