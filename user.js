@@ -1,7 +1,7 @@
 const express = require("express");
 const connection = require("./database");
-
-
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const router = express.Router();
 
 const getuser = async (req, res) => {
@@ -45,11 +45,16 @@ const getuser = async (req, res) => {
   const Addusers = async (req, res) => {
     try {
       const { email, password, names, is_active, created_at } = req.body;
+    
+     
+      const  passhass = await  bcrypt.hash(password, saltRounds);
       console.log(req.body);
       let queryStrng = `insert into users(email ,password ,names,is_active,created_at) values(? ,? ,?,? ,?)`;
       const [results] = await connection
         .promise()
-        .query(queryStrng, [email, password, names, is_active, created_at]);
+        .execute(queryStrng, [email, passhass, names, is_active, created_at]);
+
+
       res.status(201).send({
         message: "user successfully added ",
         results,
@@ -193,36 +198,48 @@ const getuser = async (req, res) => {
   const userLogin = async (req,res)=>{
     try {
       const {email,password} = req.body;
-     console.log(req.body)
+   
       if (!email ||  !password ) {
         res.status(400).send({
           message: "missing parameter",
         });
-      } else {  
-        const sqlquery =
-          `select email,password from users where email=? and password =? `;
-        const [results] = await connection
+      } 
+       const  sqlquery2 = "select email ,password from users where email=?";
+        const [resultspassword] = await connection
           .promise() 
-          .execute(sqlquery, [email,password]);
-        
-          if ( results.length === 0) {
+          .execute(sqlquery2, [email]);
+
+          if ( resultspassword.length === 0) {
             res.status(500).send({message:"Invalid credentails"})
           }
+        
+        const hasspassword = resultspassword[0].password;
+        const passedpassword = await bcrypt.compare(password,hasspassword);
+        console.log(passedpassword)
+        
+        if ( passedpassword) {
+          console.log("object")
+          res.status(200).send({
+            message: "Login successfully",
+            passedpassword
+          });
+        }
+        else
+        {
+         console.log("object")
           
-       else{
-        res.status(200).send({
-          message: "Login successfully",
-          result: results,
-        });
-       }}
-    } catch (error) {
+        }
+        
+      
+    } 
+    catch (error) {
       res.status(500).send({
-        message: "Internal server error",
-        error,
+        message: "Internal server error"
       });
       // console.log(error);
     }
   }
+
   const forgetpassword = async(req,res)=>{
    
    try {
@@ -285,6 +302,7 @@ const getuser = async (req, res) => {
 const middleware = (req,res,next)=>{
     const {user_id,token} = req.headers
    if (user_id && token) {
+    // console.log("object")
     next();
    }
    else{
@@ -295,7 +313,7 @@ const middleware = (req,res,next)=>{
   
   
 
-router.get("/v1/users/login",middleware, userLogin);
+router.post("/v1/users/login", userLogin);
 router.post("/v1/users/forgetpassword", forgetpassword);
 router.post("/v1/users/resetpassword",resetpassword)
 router.post("/v1/users", Addusers);
