@@ -1,8 +1,10 @@
 const express = require("express");
-const connection = require("./database");
+const sequelize = require("./database");
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const router = express.Router();
+const usermodel = require("./Models/UserModel");
+const jwt = require('jsonwebtoken');
 
 const getuser = async (req, res) => {
     try {
@@ -44,22 +46,28 @@ const getuser = async (req, res) => {
   };
   const Addusers = async (req, res) => {
     try {
-      const { email, password, names, is_active, created_at } = req.body;
+      const {id, email, password, names, is_active, created_at } = req.body;
     
      
       const  passhass = await  bcrypt.hash(password, saltRounds);
-      console.log(req.body);
-      let queryStrng = `insert into users(email ,password ,names,is_active,created_at) values(? ,? ,?,? ,?)`;
-      const [results] = await connection
-        .promise()
-        .execute(queryStrng, [email, passhass, names, is_active, created_at]);
+      // console.log(req.body);
+      let queryStrng = await usermodel.create({
+        email:email,
+        password:passhass ,
+        names:names,
+        is_active:is_active,
+        created_at:created_at});
+
+      // const [results] = await connection
+      //   .promise()
+      //   .execute(queryStrng, [email, passhass, names, is_active, created_at]);
 
 
       res.status(201).send({
         message: "user successfully added ",
-        results,
+        queryStrng,
       });
-      console.log(results);
+      // console.log(results);
     } catch (error) {
       console.log(error);
       res.status(500).send({
@@ -204,39 +212,38 @@ const getuser = async (req, res) => {
           message: "missing parameter",
         });
       } 
-       const  sqlquery2 = "select email ,password from users where email=?";
-        const [resultspassword] = await connection
-          .promise() 
-          .execute(sqlquery2, [email]);
+      // const  sqlquery2 = "select id ,email ,password from users where email=?";
+      
+        const [resultspassword] = await usermodel.findAll({ where: { email:email} })
+           
+         
+          // console.log(resultspassword.password)
 
           if ( resultspassword.length === 0) {
-            res.status(500).send({message:"Invalid credentails"})
+            res.status(400).send({message:"Invalid credentails"});
           }
         
-        const hasspassword = resultspassword[0].password;
+        const hasspassword = resultspassword.password;
         const passedpassword = await bcrypt.compare(password,hasspassword);
-        console.log(passedpassword)
+        // console.log(passedpassword)
+        const token = jwt.sign({user_id:resultspassword.id,},"shhhhh");
+        //  console.log(token.user_id)
+        if ( !passedpassword) {
         
-        if ( passedpassword) {
-          console.log("object")
-          res.status(200).send({
-            message: "Login successfully",
-            passedpassword
-          });
+          res.status(400).send({message:"incorrect password"});
         }
-        else
-        {
-         console.log("object")
-          
-        }
+        res.status(200).send({
+          message: "Login successfully",
+          resultspassword,
+          token
+        });
         
-      
     } 
     catch (error) {
       res.status(500).send({
         message: "Internal server error"
       });
-      // console.log(error);
+      console.log(error);
     }
   }
 
@@ -300,24 +307,29 @@ const getuser = async (req, res) => {
   }
 
 const middleware = (req,res,next)=>{
-    const {user_id,token} = req.headers
-   if (user_id && token) {
-    // console.log("object")
-    next();
+   if (req.headers && req.headers.token) {
+    try {
+      
+      const token = req.headers.token;
+      const decodetoken = jwt.verify(token,"shhhhh")
+    } catch (error) {
+      res.status(200).send({message:"Invalid token"})
+    }
+    next()
+    return;
    }
-   else{
-    res.status(400).send({message:"Invalid request"})
-   }
-
+   res.status(400).send({
+    message: "Token Required"
+  })
   } 
   
   
 
-router.post("/v1/users/login", userLogin);
+router.post("/v1/users/login",userLogin);
 router.post("/v1/users/forgetpassword", forgetpassword);
 router.post("/v1/users/resetpassword",resetpassword)
 router.post("/v1/users", Addusers);
-router.get("/v1/users", getuser);
+router.get("/v1/users", middleware,getuser);
 router.put("/v1/users/:id", updateUser);
 //soft delete 
 router.post("/v1/users/:id", deleteUser);
